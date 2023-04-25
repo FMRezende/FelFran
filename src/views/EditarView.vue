@@ -38,8 +38,10 @@
 <script setup>
 import { onMounted, reactive } from "vue";
 import { useRoute } from "vue-router";
-import { useDatabaseStore } from "../stores/database";
+import { useDatabaseStore } from "../stores/listStore";
 import { message } from "ant-design-vue";
+import { supabase } from "../supabase";
+
 const databaseStore = useDatabaseStore();
 const route = useRoute();
 const formState = reactive({
@@ -47,7 +49,7 @@ const formState = reactive({
 });
 const onFinish = async (value) => {
     console.log("todo correcto " + value);
-    const error = await databaseStore.updateTarea(route.params.id, formState.tarea);
+    const error = await supabase.databaseStore.editTask(route.params.id, formState.tarea);
     if (!error) {
         formState.tarea = "";
         return message.success("Tarea editada ");
@@ -62,6 +64,6 @@ const onFinish = async (value) => {
     }
 };
 onMounted(async () => {
-    formState.tarea = await databaseStore.leerTarea(route.params.id);
+    formState.tarea = await databaseStore.editTask(route.params.id);
 });
 </script>

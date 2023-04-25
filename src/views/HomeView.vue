@@ -3,7 +3,7 @@
 <template>
     <div>
         <h1>Home Ruta protegida</h1>
-        <p>{{ userStore.userData?.email }}</p>
+        <p>{{ userStore.user?.email }}</p>
 
         <add-form></add-form>
 
@@ -50,7 +50,7 @@
 
 <script setup>
 import { useUserStore } from "../stores/user";
-import { useDatabaseStore } from "../stores/database";
+import { useDatabaseStore } from "../stores/listStore";
 import { useRouter } from "vue-router";
 import { message } from "ant-design-vue";
 
@@ -58,10 +58,10 @@ const userStore = useUserStore();
 const databaseStore = useDatabaseStore();
 const router = useRouter();
 
-databaseStore.getTareas();
+databaseStore.fetchTasks();
 
 const confirm = async (id) => {
-    const error = await databaseStore.deleteTarea(id);
+    const error = await databaseStore.deleteTask(id);
     if (!error) return message.success("Se eliminó con éxito ");
     return message.error(error);
 };

@@ -1,14 +1,17 @@
 <script setup>
 import { reactive } from "vue";
-import { useDatabaseStore } from "../stores/database";
+import { useDatabaseStore } from "../stores/listStore.js";
 import { message } from "ant-design-vue";
+import { supabase } from "../supabase";
+
+
 const databaseStore = useDatabaseStore();
 const formState = reactive({
     tarea: "",
 });
 const onFinish = async (value) => {
     console.log("todo correcto " + value);
-    const error = await databaseStore.addTarea(formState.tarea);
+    const error = await supabase.databaseStore.addTask(formState.tarea);
     if (!error) {
         formState.tarea = "";
         return message.success("Tarea agregada ");

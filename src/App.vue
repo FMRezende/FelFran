@@ -7,18 +7,18 @@
               :style="{ lineHeight: '64px' }"
               v-model:selectedKeys="selectedKeys"
           >
-              <a-menu-item v-if="userStore.userData" key="home">
+              <a-menu-item v-if="userStore.user" key="home">
                   <router-link to="/">Home</router-link>
               </a-menu-item>
-              <a-menu-item v-if="!userStore.userData" key="login">
+              <a-menu-item v-if="!userStore.user" key="login">
                   <router-link to="/login">Login</router-link>
               </a-menu-item>
-              <a-menu-item v-if="!userStore.userData" key="register">
+              <a-menu-item v-if="!userStore.user" key="register">
                   <router-link to="/register">Register</router-link>
               </a-menu-item>
               <a-menu-item
                   @click="userStore.logoutUser"
-                  v-if="userStore.userData"
+                  v-if="userStore.user"
                   key="logout"
               >
                   Logout

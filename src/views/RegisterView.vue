@@ -71,6 +71,8 @@
 import { reactive } from "vue";
 import { useUserStore } from "../stores/user";
 import { message } from "ant-design-vue";
+
+
 const userStore = useUserStore();
 const formState = reactive({
     email: "",
@@ -88,7 +90,7 @@ const validatePass = async (_rule, value) => {
 };
 const onFinish = async (values) => {
     console.log("Success:", values);
-    const error = await userStore.registerUser(
+    const error = await userStore.signUp(
         formState.email,
         formState.password
     );
