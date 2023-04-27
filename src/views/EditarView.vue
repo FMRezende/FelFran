@@ -38,10 +38,10 @@
 <script setup>
 import { onMounted, reactive } from "vue";
 import { useRoute } from "vue-router";
-import { useDatabaseStore } from "../stores/listStore";
+import { useDatabaseStore } from "../stores/database";
 import { message } from "ant-design-vue";
 import { supabase } from "../supabase";
-
+//import { supabase } from "../supabase";
 const databaseStore = useDatabaseStore();
 const route = useRoute();
 const formState = reactive({

@@ -92,7 +92,8 @@ const onFinish = async (values) => {
     console.log("Success:", values);
     const error = await userStore.signUp(
         formState.email,
-        formState.password
+        formState.password,
+        
     );
     if (!error) {
         return message.success("Revisa tu correo electrónico y verificalo");

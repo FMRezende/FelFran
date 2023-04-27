@@ -1,95 +1,70 @@
 <template>
-    <h1 class="text-center">Login</h1>
-    <a-row>
-        <a-col :xs="{ span: 24 }" :sm="{ span: 12, offset: 6 }">
-            <a-form
-                name="basicLogin"
-                autocomplete="off"
-                layout="vertical"
-                :model="formState"
-                @finish="onFinish"
-                @finishFailed="onFinishFailed"
+    <div>
+        <h1>Home Ruta protegida</h1>
+        <p>{{ userStore.user?.email }}</p>
+
+        <add-form></add-form>
+
+        <p v-if="databaseStore.loadingDoc">loading docs...</p>
+
+        <a-space
+            direction="vertical"
+            v-if="!databaseStore.loadingDoc"
+            style="width: 100%"
+        >
+            <a-card
+                v-for="item of databaseStore.documents"
+                :key="item.id"
+                :title="item.short" 
             >
-                <a-form-item
-                    name="email"
-                    label="Ingrese tu correo"
-                    :rules="[
-                        {
-                            required: true,
-                            whitespace: true,
-                            type: 'email',
-                            message: 'Ingresa un email válido',
-                        },
-                    ]"
-                >
-                    <a-input v-model:value="formState.email"></a-input>
-                </a-form-item>
-                <a-form-item
-                    name="password"
-                    label="Ingrese contraseña"
-                    :rules="[
-                        {
-                            required: true,
-                            min: 6,
-                            whitespace: true,
-                            message:
-                                'Ingresa una contraseña con mínimo 6 carácteres',
-                        },
-                    ]"
-                >
-                    <a-input-password
-                        v-model:value="formState.password"
-                    ></a-input-password>
-                </a-form-item>
-                <a-form-item>
-                    <a-button
-                        type="primary"
-                        html-type="submit"
-                        :disabled="userStore.loadingUser"
-                        :loading="userStore.loadingUser"
-                        >Ingresar</a-button
-                    >
-                </a-form-item>
-            </a-form>
-        </a-col>
-    </a-row>
+                <template #extra>
+                    <a-space>
+                        <a-popconfirm
+                            title="¿Estás seguro que deseas eliminar?"
+                            ok-text="Sí"
+                            cancel-text="No"
+                            @confirm="confirm(item.id)"
+                            @cancel="cancel"
+                        >
+                            <a-button
+                                danger
+                                :loading="databaseStore.loading"
+                                :disabled="databaseStore.loading"
+                                >Eliminar</a-button
+                            >
+                        </a-popconfirm>
+                        <a-button
+                            type="primary"
+                            @click="router.push(`/editar/${item.id}`)"
+                            >Editar</a-button
+                        >
+                    </a-space>
+                </template>
+                <p>{{ item.name }}</p>
+            </a-card>
+        </a-space>
+    </div>
 </template>
 
 <script setup>
-import { reactive } from "vue";
 import { useUserStore } from "../stores/user";
+import { useDatabaseStore } from "../stores/database";
+import { useRouter } from "vue-router";
 import { message } from "ant-design-vue";
 
-
 const userStore = useUserStore();
-const formState = reactive({
-    email: "",
-    password: "",
-});
-const onFinish = async (values) => {
-    console.log("Success:", values);
-    const error = await userStore.signIn(
-        formState.email,
-        formState.password
-    );
-    if (!error) {
-        return message.success("Bienvenidos a la super apps ");
-    }
-    switch (error) {
-        case "auth/user-not-found":
-            message.error("No existe el correo registrado ");
-            break;
-        case "auth/wrong-password":
-            message.error("Error de contraseña ");
-            break;
-        default:
-            message.error(
-                "Ocurrió un error en el servidor intentelo más tarde..."
-            );
-            break;
-    }
+const databaseStore = useDatabaseStore();
+const router = useRouter();
+
+databaseStore.fetchTasks();
+
+const confirm = async (id) => {
+    const {error} = await databaseStore.deleteTask(id);
+    if (!error) return message.success("Se eliminó con éxito ");
+    return message.error(error);
 };
-const onFinishFailed = (errorInfo) => {
-    console.log("Failed:", errorInfo);
+
+const cancel = () => {
+    message.error("no se eliminó ");
 };
 </script>

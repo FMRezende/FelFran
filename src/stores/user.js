@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { supabase } from "../supabase";
 import router from "../router";
-import { useDatabaseStore } from "./listStore";
+import { useDatabaseStore } from "./database";
 
 export const useUserStore = defineStore("userStore", {
   state: () => ({
@@ -9,21 +9,24 @@ export const useUserStore = defineStore("userStore", {
     loadingUser: false,
     loadingSession: false,
   }),
-  
+  /////////////
   actions: {
     async fetchUser() {
-      const user = await supabase.auth.getSession();
+      const user = await supabase.auth.user();
       this.user = user;
     },
 
     async signIn(email, password) {
       this.loadingUser = true;
       try{
-      const { user } = await supabase.auth.signInWithPassword({
+      const { user, error } = await supabase.auth.signIn({
+        
         email,
-        password
+        password,
       });
-      this.userData = { email: user.email, uid: user.uid };
+
+      if (error) throw error;
+      this.user = { email: user.email, uid: user.id };
       router.push("/");
     } catch (error) {
         console.log(error.code);
@@ -31,21 +34,21 @@ export const useUserStore = defineStore("userStore", {
     } finally {
         this.loadingUser = false;
     }
-      
+          
     },
-
 
     async signUp(email, password) {
       const { user, error } = await supabase.auth.signUp({
         email,
-        password
+        password,
       });
       if (error) throw error;
       if (user) {
-        this.user = user;
+        this.user = { email: user.email, uid: user.id };
       }
       router.push("/login");
     },
+    
     async signOut() {
       try {
         const { error } = await supabase.auth.signOut();
@@ -61,38 +64,24 @@ export const useUserStore = defineStore("userStore", {
       router.push("/login");
     },
 
-    currentUser() {
-      return new Promise((resolve, reject) => {
-          const unsuscribe = supabase.onAuthStateChanged(
-              
-              (user) => {
-                  if (user) {
-                      this.user = {
-                          email: user.email,
-                          uid: user.uid,
-                      };
-                  } else {
-                      this.user = null;
-                      const databaseStore = useDatabaseStore();
-                      databaseStore.$reset();
-                  }
-                  resolve(user);
-              },
-              (e) => reject(e)
-          );
-          unsuscribe();
-      });
-  },
-    persist: {
-      enabled: true,
-      strategies: [
-        {
-          key: "user",
-          storage: localStorage,
-        },
-      ],
+    async currentUser() {
+      try {
+        const user = await supabase.auth.user();
+        if (user) {
+          this.user = {
+            email: user.email,
+            uid: user.id,
+          };
+        } else {
+          this.user = null;
+          const databaseStore = useDatabaseStore();
+          databaseStore.$reset();
+        }
+        return user;
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
     },
   },
 });
-
-

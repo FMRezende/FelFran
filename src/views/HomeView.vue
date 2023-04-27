@@ -1,5 +1,3 @@
-<!--colocar o botao de feito ou nao na linha 20-->
-
 <template>
     <div>
         <h1>Home Ruta protegida</h1>
@@ -50,7 +48,7 @@
 
 <script setup>
 import { useUserStore } from "../stores/user";
-import { useDatabaseStore } from "../stores/listStore";
+import { useDatabaseStore } from "../stores/database";
 import { useRouter } from "vue-router";
 import { message } from "ant-design-vue";
 
@@ -61,7 +59,7 @@ const router = useRouter();
 databaseStore.fetchTasks();
 
 const confirm = async (id) => {
-    const error = await databaseStore.deleteTask(id);
+    const {error} = await databaseStore.deleteTask(id);
     if (!error) return message.success("Se eliminó con éxito ");
     return message.error(error);
 };

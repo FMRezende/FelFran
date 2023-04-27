@@ -1,43 +1,31 @@
-/*import { createRouter, createWebHistory } from "vue-router";
-import AuthView from "../views/AuthView.vue";
-import HomeView from "../views/HomeView.vue";
-import LoginView from "../views/LoginView.vue";
-import RegisterView from "../views/RegisterView.vue";
-
-const routes = [
-  {
-    path: "/auth",
-    component: AuthView,
-    children: [
-      { path: "login", component: LoginView },
-      { path: "sign-up", component: RegisterView },
-    ],
-  },
-  {
-    path: "/",
-    component: HomeView,
-  },
-];
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-});
-export default router;*/
-
 import { createRouter, createWebHistory } from "vue-router";
-import { useUserStore } from "../stores/user";
-
+import { defineStore } from "pinia"; // import Pinia store
+import { supabase } from "../supabase"; // import Supabase configuration
 import HomeView from "../views/HomeView.vue";
 import EditarView from "../views/EditarView.vue";
 import LoginView from "../views/LoginView.vue";
 import RegisterView from "../views/RegisterView.vue";
-import { supabase } from "../supabase";
+//import { useUserStore } from "../stores/user";
 
+
+// Define a Pinia store for handling user-related state and actions
+export const useUserStore = defineStore("user", {
+    state: () => ({
+        loadingSession: false,
+    }),
+    actions: {
+        async currentUser() {
+            // Update this action to fetch current user from Supabase
+            const user = supabase.auth.user();
+            return user;
+        },
+    },
+});
 
 const requireAuth = async (to, from, next) => {
     const userStore = useUserStore();
     userStore.loadingSession = true;
-    const user = await supabase.userStore.fetchUser() //fetchUser()
+    const user = await supabase.userStore.currentUser();
     if (user) {
         next();
     } else {
