@@ -1,21 +1,20 @@
 import { supabase } from "../supabase"
-import { defineStore } from "pinia";
-import { nanoid } from "nanoid";
-import router from "../router/index";
+import { ref } from "vue"
+import { nanoid } from "nanoid"
+import router from "../router/index"
 
-export const useDatabaseStore = defineStore("database", {
-  state: () => ({
-    documents: [],
-    loadingDoc: false,
-    loading: false,
-  }),
-  actions: {
-    async getTareas() {
-      if (this.documents.length !== 0) {
+export default {
+  setup() {
+    const documents = ref([])
+    const loadingDoc = ref(false)
+    const loading = ref(false)
+
+    async function getTareas() {
+      if (documents.value.length !== 0) {
         return;
       }
 
-      this.loadingDoc = true;
+      loadingDoc.value = true
       try {
         const { data, error } = await supabase
           .from("tareas")
@@ -24,15 +23,16 @@ export const useDatabaseStore = defineStore("database", {
         if (error) {
           throw new Error(error.message);
         }
-        this.documents = data;
+        documents.value = data;
       } catch (error) {
         console.log(error);
       } finally {
-        this.loadingDoc = false;
+        loadingDoc.value = false
       }
-    },
-    async addTarea(name) {
-      this.loading = true;
+    }
+
+    async function addTarea(name) {
+      loading.value = true
       try {
         const objetoDoc = {
           name: name,
@@ -43,18 +43,19 @@ export const useDatabaseStore = defineStore("database", {
         if (error) {
           throw new Error(error.message);
         }
-        this.documents.push({
+        documents.value.push({
           ...objetoDoc,
           id: data[0].id,
         });
       } catch (error) {
-        console.log(error.message);
-        return error.message;
+        console.log(error.message)
+        return error.message
       } finally {
-        this.loading = false;
+        loading.value = false
       }
-    },
-    async leerTarea(id) {
+    }
+
+    async function leerTarea(id) {
       try {
         const { data, error } = await supabase.from("tareas").select("name").eq("id", id);
         if (error) {
@@ -73,9 +74,10 @@ export const useDatabaseStore = defineStore("database", {
       } catch (error) {
         console.log(error.message);
       }
-    },
-    async updateTarea(id, name) {
-      this.loading = true;
+    }
+
+    async function updateTarea(id, name) {
+      loading.value = true
       try {
         const { data, error } = await supabase.from("tareas").update({ name }).eq("id", id);
         if (error) {
@@ -90,7 +92,7 @@ export const useDatabaseStore = defineStore("database", {
           throw new Error("no le pertenece ese documento");
         }
 
-        this.documents = this.documents.map((item) =>
+        documents.value = documents.value.map((item) =>
           item.id === id ? { ...item, name: name } : item
         );
         router.push("/");
@@ -98,12 +100,12 @@ export const useDatabaseStore = defineStore("database", {
         console.log(error.message);
         return error.message;
       } finally {
-        this.loading = false;
+        loading.value = false;
       }
-    },
+    }
 
-    async deleteTarea(id) {
-      this.loading = true;
+    async function deleteTarea(id) {
+      loading.value = true
       try {
         const { data, error } = await supabase.from("tareas").delete().eq("id", id);
         if (error) {
@@ -115,17 +117,4 @@ export const useDatabaseStore = defineStore("database", {
         }
     
         if (data[0].user !== supabase.auth.user().id) {
-          throw new Error("no le pertenece ese documento");
-        }
-    
-        this.documents = this.documents.filter((item) => item.id !== id);
-      } catch (error) {
-        console.log(error.message);
-        return error.message;
-      } finally {
-        this.loading = false;
-      }
-    },
-
-},
-});
+          throw new Error("no le pertene

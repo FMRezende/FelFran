@@ -35,35 +35,53 @@
     </div>
 </template>
 
-<script setup>
-import { onMounted, reactive } from "vue";
+<script>
+import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useDatabaseStore } from "../stores/database";
 import { message } from "ant-design-vue";
 import { supabase } from "../supabase";
-//import { supabase } from "../supabase";
-const databaseStore = useDatabaseStore();
-const route = useRoute();
-const formState = reactive({
-    tarea: " ",
-});
-const onFinish = async (value) => {
-    console.log("todo correcto " + value);
-    const error = await supabase.databaseStore.editTask(route.params.id, formState.tarea);
-    if (!error) {
-        formState.tarea = "";
+
+export default {
+
+  setup() {
+    const databaseStore = useDatabaseStore();
+    const route = useRoute();
+
+    const formState = ref({
+      tarea: "",
+    });
+
+    const onFinish = async (value) => {
+      console.log("todo correcto " + value);
+      const error = await supabase.databaseStore.editTask(
+        route.params.id,
+        formState.value.tarea
+      );
+      if (!error) {
+        formState.value.tarea = "";
         return message.success("Tarea editada ");
-    }
-    switch (error) {
+      }
+      switch (error) {
         // buscar errores de firestore
         default:
-            message.error(
-                "Ocurrió un error en el servidor intentelo más tarde..."
-            );
-            break;
-    }
+          message.error(
+            "Ocurrió un error en el servidor intentelo más tarde..."
+          );
+          break;
+      }
+    };
+
+    onMounted(async () => {
+      formState.value.tarea = await databaseStore.editTask(route.params.id);
+    });
+
+    return {
+      databaseStore,
+      route,
+      formState,
+      onFinish,
+    };
+  },
 };
-onMounted(async () => {
-    formState.tarea = await databaseStore.editTask(route.params.id);
-});
 </script>

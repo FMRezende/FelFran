@@ -1,44 +1,41 @@
 import { defineStore } from "pinia";
 import { supabase } from "../supabase";
 import router from "../router";
-import { useDatabaseStore } from "./database";
 
-export const useUserStore = defineStore("userStore", {
+export default defineStore({
+  id: "user",
   state: () => ({
-    user: null,
+    user: undefined,
     loadingUser: false,
     loadingSession: false,
   }),
-  /////////////
   actions: {
     async fetchUser() {
-      const user = await supabase.auth.user();
+      const { data: { user } } = await supabase.auth.getUser();
       this.user = user;
     },
 
     async signIn(email, password) {
       this.loadingUser = true;
-      try{
-      const { user, error } = await supabase.auth.signIn({
-        
-        email,
-        password,
-      });
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        router.push("home");
 
-      if (error) throw error;
-      this.user = { email: user.email, uid: user.id };
-      router.push("/");
-    } catch (error) {
+        if (error) throw error;
+        if (data) this.user = data;
+      } catch (error) {
         console.log(error.code);
         return error.code;
-    } finally {
+      } finally {
         this.loadingUser = false;
-    }
-          
+      }
     },
 
     async signUp(email, password) {
-      const { user, error } = await supabase.auth.signUp({
+      const { data: { user }, error } = await supabase.auth.signUp({
         email,
         password,
       });
@@ -46,9 +43,9 @@ export const useUserStore = defineStore("userStore", {
       if (user) {
         this.user = { email: user.email, uid: user.id };
       }
-      router.push("/login");
+      router.push("login");
     },
-    
+
     async signOut() {
       try {
         const { error } = await supabase.auth.signOut();
@@ -56,17 +53,17 @@ export const useUserStore = defineStore("userStore", {
         this.user = null;
         this.loadingSession = null;
         console.log(`Pinia user after signOut is ${JSON.stringify(this.user)}`);
-    
+
         return error;
       } catch (e) {
         console.log(`Error from userStore signOut() is ${e}`);
       }
-      router.push("/login");
+      router.push("login");
     },
 
     async currentUser() {
       try {
-        const user = await supabase.auth.user();
+        const user = await supabase.auth.getUser();
         if (user) {
           this.user = {
             email: user.email,
@@ -74,7 +71,7 @@ export const useUserStore = defineStore("userStore", {
           };
         } else {
           this.user = null;
-          const databaseStore = useDatabaseStore();
+          const databaseStore = defineStore();
           databaseStore.$reset();
         }
         return user;
