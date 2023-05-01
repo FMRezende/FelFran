@@ -1,20 +1,21 @@
 import { supabase } from "../supabase"
-import { ref } from "vue"
-import { nanoid } from "nanoid"
-import router from "../router/index"
+import { defineStore } from "pinia";
+import { nanoid } from "nanoid";
+import router from "../router/index";
 
-export default {
-  setup() {
-    const documents = ref([])
-    const loadingDoc = ref(false)
-    const loading = ref(false)
-
-    async function getTareas() {
-      if (documents.value.length !== 0) {
+export const useDatabaseStore = defineStore("database", {
+  state: () => ({
+    documents: [],
+    loadingDoc: false,
+    loading: false,
+  }),
+  actions: {
+    async getTareas() {
+      if (this.documents.length !== 0) {
         return;
       }
 
-      loadingDoc.value = true
+      this.loadingDoc = true;
       try {
         const { data, error } = await supabase
           .from("tareas")
@@ -23,16 +24,15 @@ export default {
         if (error) {
           throw new Error(error.message);
         }
-        documents.value = data;
+        this.documents = data;
       } catch (error) {
         console.log(error);
       } finally {
-        loadingDoc.value = false
+        this.loadingDoc = false;
       }
-    }
-
-    async function addTarea(name) {
-      loading.value = true
+    },
+    async addTarea(name) {
+      this.loading = true;
       try {
         const objetoDoc = {
           name: name,
@@ -43,19 +43,18 @@ export default {
         if (error) {
           throw new Error(error.message);
         }
-        documents.value.push({
+        this.documents.push({
           ...objetoDoc,
           id: data[0].id,
         });
       } catch (error) {
-        console.log(error.message)
-        return error.message
+        console.log(error.message);
+        return error.message;
       } finally {
-        loading.value = false
+        this.loading = false;
       }
-    }
-
-    async function leerTarea(id) {
+    },
+    async leerTarea(id) {
       try {
         const { data, error } = await supabase.from("tareas").select("name").eq("id", id);
         if (error) {
@@ -74,10 +73,9 @@ export default {
       } catch (error) {
         console.log(error.message);
       }
-    }
-
-    async function updateTarea(id, name) {
-      loading.value = true
+    },
+    async updateTarea(id, name) {
+      this.loading = true;
       try {
         const { data, error } = await supabase.from("tareas").update({ name }).eq("id", id);
         if (error) {
@@ -92,7 +90,7 @@ export default {
           throw new Error("no le pertenece ese documento");
         }
 
-        documents.value = documents.value.map((item) =>
+        this.documents = this.documents.map((item) =>
           item.id === id ? { ...item, name: name } : item
         );
         router.push("/");
@@ -100,12 +98,12 @@ export default {
         console.log(error.message);
         return error.message;
       } finally {
-        loading.value = false;
+        this.loading = false;
       }
-    }
+    },
 
-    async function deleteTarea(id) {
-      loading.value = true
+    async deleteTarea(id) {
+      this.loading = true;
       try {
         const { data, error } = await supabase.from("tareas").delete().eq("id", id);
         if (error) {
@@ -117,4 +115,17 @@ export default {
         }
     
         if (data[0].user !== supabase.auth.user().id) {
-          throw new Error("no le pertene
+          throw new Error("no le pertenece ese documento");
+        }
+    
+        this.documents = this.documents.filter((item) => item.id !== id);
+      } catch (error) {
+        console.log(error.message);
+        return error.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+},
+});

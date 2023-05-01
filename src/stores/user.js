@@ -1,37 +1,41 @@
 import { defineStore } from "pinia";
 import { supabase } from "../supabase";
-import router from "../router";
+import router from "../router/index"; //funciona desta etapa
 
-export default defineStore({
-  id: "user",
+
+export const useUserStore = defineStore("userStore", {
   state: () => ({
     user: undefined,
     loadingUser: false,
     loadingSession: false,
   }),
+  /////////////
   actions: {
     async fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser()
+      
       this.user = user;
-    },
+  },
 
     async signIn(email, password) {
       this.loadingUser = true;
-      try {
+      try{
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        router.push("home");
+        email,
+        password,
+      });
+       router.push("home");
 
-        if (error) throw error;
-        if (data) this.user = data;
-      } catch (error) {
+      if (error) throw error;
+      if (data) this.user = data
+      
+    } catch (error) {
         console.log(error.code);
         return error.code;
-      } finally {
+    } finally {
         this.loadingUser = false;
-      }
+    }
+          
     },
 
     async signUp(email, password) {
@@ -45,7 +49,8 @@ export default defineStore({
       }
       router.push("login");
     },
-
+    
+    
     async signOut() {
       try {
         const { error } = await supabase.auth.signOut();
@@ -53,14 +58,17 @@ export default defineStore({
         this.user = null;
         this.loadingSession = null;
         console.log(`Pinia user after signOut is ${JSON.stringify(this.user)}`);
-
+    
         return error;
       } catch (e) {
         console.log(`Error from userStore signOut() is ${e}`);
       }
-      router.push("login");
+      router.push("home");
+    },
+      //router.push("/register");
     },
 
+    
     async currentUser() {
       try {
         const user = await supabase.auth.getUser();
@@ -79,6 +87,6 @@ export default defineStore({
         console.log(error);
         throw error;
       }
-    },
+    }, 
   },
-});
+);
